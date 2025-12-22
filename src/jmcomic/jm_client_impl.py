@@ -813,7 +813,10 @@ class JmApiClient(AbstractJmClient):
         # 检查禁漫最新的版本号
         setting_ver = str(resp.model_data.version)
         # 禁漫接口的版本 > jmcomic库内置版本
-        if setting_ver > JmMagicConstants.APP_VERSION and JmModuleConfig.FLAG_USE_VERSION_NEWER_IF_BEHIND:
+        if (
+                JmModuleConfig.FLAG_USE_VERSION_NEWER_IF_BEHIND
+                and JmcomicText.compare_versions(setting_ver, JmMagicConstants.APP_VERSION) == 1
+        ):
             jm_log('api.setting', f'change APP_VERSION from [{JmMagicConstants.APP_VERSION}] to [{setting_ver}]')
             JmMagicConstants.APP_VERSION = setting_ver
 
