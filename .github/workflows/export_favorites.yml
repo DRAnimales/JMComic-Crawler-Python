@@ -72,20 +72,19 @@ jobs:
 
       - name: 🚀 解压并将清单推送至仓库根目录
         run: |
-          cd ./usage/
-          # 1. 使用你已经在 env 中配置好的 ZIP_PASSWORD 解压
-          7z x export.7z -p${{ env.ZIP_PASSWORD }} -y
+          # 1. 直接对 env 中定义的绝对路径进行解压，输出到当前目录
+          7z x "${{ env.ZIP_FP }}" -p"${{ env.ZIP_PASSWORD }}" -y
           
-          # 2. 将解压出的 csv 移动并重命名到仓库根目录
-          mv *.csv ../favorite_list.csv || true
+          # 2. 检查并移动解压出来的 CSV 到仓库根目录
+          # 使用 find 命令确保即便文件名有细微差别也能抓到
+          find . -maxdepth 2 -name "*.csv" -exec mv {} ./favorite_list.csv \;
           
-          cd ..
-          # 3. 提交并推送至 master 分支
+          # 3. 配置 git 并推送
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add favorite_list.csv
           
-          # 只有在清单有变化时才提交，防止 workflow 报错
+          # 仅在文件有变动时推送
           git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 自动同步最新收藏清单" && git push)
 
       - name: 上传结果 (保留原始 Artifact)
@@ -93,4 +92,5 @@ jobs:
         with:
           name: '导出的收藏夹'
           path: ${{ env.ZIP_FP }}
-          retention-days: 7
+          if-no-files-found: error
+          retention-days: 90
